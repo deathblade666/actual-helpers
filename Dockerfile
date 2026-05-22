@@ -61,6 +61,3 @@ COPY --chown=node:node actual-build/dist /usr/src/app/actual-api
 
 # Install helper dependencies
 RUN npm install && npm update
-
-# Run Actual API server
-ENTRYPOINT ["node", "/usr/src/app/actual-api/index.js"]
