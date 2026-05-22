@@ -1,4 +1,4 @@
-name: Sync, update commit, and publish Docker image
+name: Sync, build Actual API, and publish Docker image
 
 on:
   schedule:
@@ -42,6 +42,19 @@ jobs:
           else
             echo "modified=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          git config --global user.name 'deathblade666'
+          git config --global user.email 'halo2ofdeath@gmail.com'
+          git commit -am "Rebase upstream + update Actual commit SHA"
+          git push --force-with-lease
+
+      # ---------------------------------------------------------
+      # Clone & Build Actual API
+      # ---------------------------------------------------------
+
       - name: Clone Actual repo
         run: |
           git clone https://github.com/actualbudget/actual.git actual-src
@@ -63,17 +76,9 @@ jobs:
           mkdir -p actual-build
           cp -R actual-src/packages/api/dist actual-build/
 
-      - name: Commit and push changes
-        if: steps.git-check.outputs.modified == 'true'
-        run: |
-          git config --global user.name 'deathblade666'
-          git config --global user.email 'halo2ofdeath@gmail.com'
-          git commit -am "Rebase upstream + update Actual commit SHA"
-          git push --force-with-lease
-
-      # -------------------------------
-      # Build & Publish Docker Image
-      # -------------------------------
+      # ---------------------------------------------------------
+      # Build & Push Docker Image
+      # ---------------------------------------------------------
 
       - name: Log in to GHCR
         run: |
@@ -91,3 +96,14 @@ jobs:
           COMMIT_SHA=$(cat actual-latest.txt)
           docker push ghcr.io/deathblade666/actual-helper-nightly:latest
           docker push ghcr.io/deathblade666/actual-helper-nightly:${COMMIT_SHA}
+
+      # ---------------------------------------------------------
+      # Webhook Notification
+      # ---------------------------------------------------------
+
+      - name: Send completion webhook
+        if: always()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{\"status\":\"completed\",\"result\":\"${{ job.status }}\",\"commit\":\"$(cat actual-latest.txt)\"}" \
+          ${{ secrets.WEBHOOK_URL }}
