@@ -65,10 +65,10 @@ jobs:
           cd actual-src
           yarn install --frozen-lockfile
 
-      - name: Build monorepo (API included)
+      - name: Build ONLY the API package and its deps
         run: |
           cd actual-src
-          yarn build
+          yarn turbo run build --filter=@actual-app/api...
 
       - name: Copy built API package into Docker context
         run: |
