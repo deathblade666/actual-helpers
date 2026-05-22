@@ -75,7 +75,8 @@ jobs:
       - name: Copy built Actual API into Docker context
         run: |
           mkdir -p actual-build
-          cp -R actual-src/packages/api/dist actual-build/
+          cp -R actual-src/packages/server/dist actual-build/
+
 
       # ---------------------------------------------------------
       # Build & Push Docker Image
