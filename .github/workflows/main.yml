@@ -66,10 +66,11 @@ jobs:
           cd actual-src
           yarn install --frozen-lockfile
 
-      - name: Build Actual API
+      - name: Build Actual server
         run: |
           cd actual-src
-          yarn workspace @actual-app/api build
+          yarn build:server
+
 
       - name: Copy built Actual API into Docker context
         run: |
