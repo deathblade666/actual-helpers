@@ -54,28 +54,28 @@ jobs:
       # ---------------------------------------------------------
       # Clone & Build Actual API
       # ---------------------------------------------------------
-
       - name: Clone Actual repo
         run: |
           git clone https://github.com/actualbudget/actual.git actual-src
           cd actual-src
           git checkout $(cat ../actual-latest.txt)
 
-      - name: Install dependencies for Actual API
+      - name: Install dependencies
         run: |
           cd actual-src
           yarn install --frozen-lockfile
 
-      - name: Build Actual server
+      - name: Build API package only
         run: |
           cd actual-src
-          yarn build:server
+          yarn build:types
+          yarn workspace @actual-app/api build
 
-
-      - name: Copy built Actual API into Docker context
+      - name: Copy built API package into Docker context
         run: |
           mkdir -p actual-build
-          cp -R actual-src/packages/server/dist actual-build/
+          cp -R actual-src/packages/api/dist actual-build/
+
 
 
       # ---------------------------------------------------------
