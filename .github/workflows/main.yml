@@ -42,6 +42,26 @@ jobs:
           else
             echo "modified=true" >> $GITHUB_OUTPUT
           fi
+      - name: Clone Actual repo
+        run: |
+          git clone https://github.com/actualbudget/actual.git actual-src
+          cd actual-src
+          git checkout $(cat ../actual-latest.txt)
+
+      - name: Install dependencies for Actual API
+        run: |
+          cd actual-src
+          yarn install --frozen-lockfile
+
+      - name: Build Actual API
+        run: |
+          cd actual-src
+          yarn workspace @actual-app/api build
+
+      - name: Copy built Actual API into Docker context
+        run: |
+          mkdir -p actual-build
+          cp -R actual-src/packages/api/dist actual-build/
 
       - name: Commit and push changes
         if: steps.git-check.outputs.modified == 'true'
