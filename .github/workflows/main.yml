@@ -1,0 +1,73 @@
+name: Sync, update commit, and publish Docker image
+
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/psybers/actual-helpers.git
+          git.fetch upstream
+
+      - name: Rebase onto upstream/main
+        run: |
+          git rebase upstream/main || true
+
+      - name: Fetch latest Actual commit SHA
+        run: |
+          curl -sL https://api.github.com/repos/actualbudget/actual/commits \
+          | jq -r ".[0].sha" > actual-latest.txt
+
+      - name: Check for modified files
+        id: git-check
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "modified=false" >> $GITHUB_OUTPUT
+          else
+            echo "modified=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          git config --global user.name 'deathblade666'
+          git config --global user.email 'halo2ofdeath@gmail.com'
+          git commit -am "Rebase upstream + update Actual commit SHA"
+          git push --force-with-lease
+
+      # -------------------------------
+      # Build & Publish Docker Image
+      # -------------------------------
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.PAT }}" | docker login ghcr.io -u deathblade666 --password-stdin
+
+      - name: Build Docker image
+        run: |
+          COMMIT_SHA=$(cat actual-latest.txt)
+          docker build -t ghcr.io/deathblade666/actual-helper-nightly:latest .
+          docker tag ghcr.io/deathblade666/actual-helper-nightly:latest \
+                     ghcr.io/deathblade666/actual-helper-nightly:${COMMIT_SHA}
+
+      - name: Push Docker image to GHCR
+        run: |
+          COMMIT_SHA=$(cat actual-latest.txt)
+          docker push ghcr.io/deathblade666/actual-helper-nightly:latest
+          docker push ghcr.io/deathblade666/actual-helper-nightly:${COMMIT_SHA}
