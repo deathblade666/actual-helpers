@@ -65,18 +65,15 @@ jobs:
           cd actual-src
           yarn install --frozen-lockfile
 
-      - name: Build API package only
+      - name: Build monorepo (API included)
         run: |
           cd actual-src
-          yarn build:types
-          yarn workspace @actual-app/api build
+          yarn build
 
       - name: Copy built API package into Docker context
         run: |
           mkdir -p actual-build
           cp -R actual-src/packages/api/dist actual-build/
-
-
 
       # ---------------------------------------------------------
       # Build & Push Docker Image
