@@ -23,7 +23,7 @@ jobs:
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/psybers/actual-helpers.git
-          git.fetch upstream
+          git fetch upstream
 
       - name: Rebase onto upstream/main
         run: |
