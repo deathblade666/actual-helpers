@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@actual-app/api": "file:./actual-api",
+    "@actual-app/api": "file:./actual-src/packages/api",
     "chromedriver": "^131.0.4",
     "dotenv": "^16.4.5",
     "jsdom": "^24.1.0",
