@@ -60,15 +60,20 @@ jobs:
           cd actual-src
           git checkout $(cat ../actual-latest.txt)
 
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Ensures compatibility for building Actual
+
       - name: Install dependencies
         run: |
           cd actual-src
           yarn install --frozen-lockfile
 
-      - name: Build ONLY the API package and its deps
+      - name: Build Actual API
         run: |
           cd actual-src
-          yarn turbo run build --filter=@actual-app/api...
+          yarn build:api
 
       - name: Copy built API package into Docker context
         run: |
