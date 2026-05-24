@@ -1,7 +1,18 @@
-# Use an official Node.js runtime as a parent image
+# ==========================================
+# STAGE 1: Build Actual Monorepo Workspace
+# ==========================================
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY actual-src/ .
+# Installs packages with native monorepo linking and builds the API package
+RUN yarn install --frozen-lockfile && yarn build:api
+
+# ==========================================
+# STAGE 2: Helper Runtime Container
+# ==========================================
 FROM node:22
 
-# Combine apt updates, installation, and cleanups to keep image size small
+# Install System Requirements for Playwright/Selenium & Chrome
 RUN apt-get update -qq -y && \
     apt-get install -y --no-install-recommends \
         libasound2 \
@@ -22,16 +33,18 @@ RUN apt-get update -qq -y && \
     mv chromedriver /usr/local/bin/ && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Create cache and API directories, ensuring the node user owns them
-RUN mkdir -p ./cache ./actual-api/dist && chown -R node:node /usr/src/app
+# Pull down the compiled workspace assets directly from Stage 1
+COPY --from=builder /app/packages/api /usr/src/app/actual-src/packages/api
+COPY --from=builder /app/packages/loot-core /usr/src/app/actual-src/packages/loot-core
+COPY --from=builder /app/node_modules /usr/src/app/actual-src/node_modules
 
-# Don't run as root
+# Ensure application permissions are healthy
+RUN mkdir -p ./cache && chown -R node:node /usr/src/app
 USER node
 
-# Define environment variables
+# Environment Variables
 ENV NODE_ENV=production
 ENV ACTUAL_SERVER_URL=""
 ENV ACTUAL_SERVER_PASSWORD=""
@@ -55,12 +68,8 @@ ENV RENTCAST_PAYEE_NAME="RentCast"
 
 VOLUME ["/usr/src/app/cache"]
 
-# Copy your helper scripts
+# Copy helper scripts
 COPY --chown=node:node . .
 
-# Copy the built Actual API structure cleanly
-COPY --chown=node:node actual-build/package.json /usr/src/app/actual-api/
-COPY --chown=node:node actual-build/dist/ /usr/src/app/actual-api/dist/
-
-# Install helper dependencies
+# Run helper installation pointing to our local built workspace dependencies
 RUN npm install && npm update
