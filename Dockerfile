@@ -3,6 +3,10 @@
 # ==========================================
 FROM node:20-slim AS builder
 WORKDIR /app
+
+# CRITICAL FIX: Install git so yarn can handle monorepo dependencies
+RUN apt-get update -qq && apt-get install -y --no-install-recommends git
+
 COPY actual-src/ .
 # Installs packages with native monorepo linking and builds the API package
 RUN yarn install --frozen-lockfile && yarn build:api
