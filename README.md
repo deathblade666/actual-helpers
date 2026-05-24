@@ -1,5 +1,7 @@
 **Note: this script requires having a starting balance in the account**
 
+### This is a fork of https://github.com/psybers/actual-helpers modified to bein line with the nightly Actual Budget releases to avoid db migration errors.
+
 # Actual Budget Helper Scripts
 
 This is a collection of useful scripts to help you manage your Actual Budget.
