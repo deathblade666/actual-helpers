@@ -99,14 +99,14 @@ The repository automatically builds and pushes a Docker image of itself every
 time the repository is modified or Actual makes a new release.  To use:
 
 ```console
-docker pull ghcr.io/psybers/actual-helpers
-docker run -d --name actual-helpers ghcr.io/psybers/actual-helpers
+docker pull ghcr.io/deathblade666/actual-helper-nightly
+docker run -d --name actual-helpers-nightly ghcr.io/deathblade666/actual-helper-nightly
 ```
 
 Then you can run specific commands inside the container, e.g.:
 
 ```console
-docker exec actual-helpers node sync-banks.js
+docker exec actual-helpers-nightly node sync-banks.js
 ```
 
 ### Using Docker Compose
@@ -117,7 +117,7 @@ file with all required settings in it.  Then download the compose file
 
 ```console
 docker compose up -d
-docker exec -it actual-helpers node sync-banks.js
+docker exec -it actual-helpers-nightly node sync-banks.js
 ```
 
 Note that most scripts do not need the `-it` flag, but some might prompt for
@@ -137,8 +137,8 @@ docker build -t actual-helper ./
 Test if the Docker container works correctly:
 
 ```console
-docker run -itd --name actual-helper actual-helper
-docker exec actual-helper node sync-banks.js
+docker run -itd --name actual-helper-nightly actual-helper-nightly
+docker exec actual-helper-nightly node sync-banks.js
 ```
 
 If it is working correctly, the bank sync should run.
