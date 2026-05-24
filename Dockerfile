@@ -80,3 +80,5 @@ COPY --chown=node:node . .
 
 # Install helper dependencies
 RUN npm install && npm update
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
