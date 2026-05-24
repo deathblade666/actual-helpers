@@ -58,7 +58,8 @@ VOLUME ["/usr/src/app/cache"]
 # Copy your helper scripts
 COPY --chown=node:node . .
 
-# FIX: Safely copy the dist folder contents directly into the target dist directory
+# Copy the built Actual API structure cleanly
+COPY --chown=node:node actual-build/package.json /usr/src/app/actual-api/
 COPY --chown=node:node actual-build/dist/ /usr/src/app/actual-api/dist/
 
 # Install helper dependencies
