@@ -1,15 +1,20 @@
 # ==========================================
-# STAGE 1: Build Actual Monorepo Workspace
+# STAGE 1: Build & Package Actual Monorepo Workspace
 # ==========================================
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# CRITICAL FIX: Install git so yarn can handle monorepo dependencies
+# Install git so yarn can handle monorepo dependencies
 RUN apt-get update -qq && apt-get install -y --no-install-recommends git
 
 COPY actual-src/ .
-# Installs packages with native monorepo linking and builds the API package
-RUN yarn install --frozen-lockfile && yarn build:api
+
+# 1. Install internal dependencies and compile the API
+# 2. Navigate to the API folder and pack it into a clean tarball package (.tgz)
+RUN yarn install --frozen-lockfile && \
+    yarn build:api && \
+    cd packages/api && \
+    yarn pack --filename actual-app-api.tgz
 
 # ==========================================
 # STAGE 2: Helper Runtime Container
@@ -39,10 +44,8 @@ RUN apt-get update -qq -y && \
 
 WORKDIR /usr/src/app
 
-# Pull down the compiled workspace assets directly from Stage 1
-COPY --from=builder /app/packages/api /usr/src/app/actual-src/packages/api
-COPY --from=builder /app/packages/loot-core /usr/src/app/actual-src/packages/loot-core
-COPY --from=builder /app/node_modules /usr/src/app/actual-src/node_modules
+# Pull down ONLY the compiled, production-ready tarball archive from Stage 1
+COPY --from=builder /app/packages/api/actual-app-api.tgz /usr/src/app/
 
 # Ensure application permissions are healthy
 RUN mkdir -p ./cache && chown -R node:node /usr/src/app
@@ -75,5 +78,5 @@ VOLUME ["/usr/src/app/cache"]
 # Copy helper scripts
 COPY --chown=node:node . .
 
-# Run helper installation pointing to our local built workspace dependencies
+# Install helper dependencies
 RUN npm install && npm update
