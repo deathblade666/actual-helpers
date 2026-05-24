@@ -1,4 +1,4 @@
-name: Sync, build Actual API, and publish Docker image
+name: Sync, package Actual source, and publish Docker image
 
 on:
   schedule:
@@ -52,34 +52,13 @@ jobs:
           git push --force-with-lease
 
       # ---------------------------------------------------------
-      # Clone & Build Actual API
+      # Clone Actual Source Code into Docker Context
       # ---------------------------------------------------------
       - name: Clone Actual repo
         run: |
           git clone https://github.com/actualbudget/actual.git actual-src
           cd actual-src
           git checkout $(cat ../actual-latest.txt)
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          cd actual-src
-          yarn install --frozen-lockfile
-
-      - name: Build Actual API
-        run: |
-          cd actual-src
-          yarn build:api
-
-      - name: Copy built API package into Docker context
-        run: |
-          mkdir -p actual-build
-          cp -R actual-src/packages/api/dist actual-build/
-          cp actual-src/packages/api/package.json actual-build/
 
       # ---------------------------------------------------------
       # Build & Push Docker Image
