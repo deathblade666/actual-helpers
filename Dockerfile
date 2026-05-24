@@ -1,13 +1,15 @@
 # Use an official Node.js runtime as a parent image
 FROM node:22
 
+# Combine apt updates, installation, and cleanups to keep image size small
 RUN apt-get update -qq -y && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         libasound2 \
         libatk-bridge2.0-0 \
         libgtk-4-1 \
         libnss3 \
         xdg-utils \
+        unzip \
         wget && \
     wget -q -O chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/linux64/chrome-linux64.zip && \
     unzip chrome-linux64.zip && \
@@ -17,20 +19,20 @@ RUN apt-get update -qq -y && \
     wget -q -O chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/linux64/chromedriver-linux64.zip && \
     unzip -j chromedriver-linux64.zip chromedriver-linux64/chromedriver && \
     rm chromedriver-linux64.zip && \
-    mv chromedriver /usr/local/bin/
-
-# Don't run as root
-USER node
+    mv chromedriver /usr/local/bin/ && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Create the cache directory
-RUN mkdir -p ./cache && chown node:node ./cache
+# Create cache and API directories, ensuring the node user owns them
+RUN mkdir -p ./cache ./actual-api/dist && chown -R node:node /usr/src/app
+
+# Don't run as root
+USER node
 
 # Define environment variables
 ENV NODE_ENV=production
-
 ENV ACTUAL_SERVER_URL=""
 ENV ACTUAL_SERVER_PASSWORD=""
 ENV ACTUAL_SYNC_ID=""
@@ -51,13 +53,13 @@ ENV BITCOIN_PAYEE_NAME="Bitcoin Price Change"
 ENV RENTCAST_API_KEY=""
 ENV RENTCAST_PAYEE_NAME="RentCast"
 
-VOLUME ./cache
+VOLUME ["/usr/src/app/cache"]
 
 # Copy your helper scripts
 COPY --chown=node:node . .
 
-# Copy the built Actual API from workflow
-COPY --chown=node:node actual-build/dist /usr/src/app/actual-api
+# FIX: Safely copy the dist folder contents directly into the target dist directory
+COPY --chown=node:node actual-build/dist/ /usr/src/app/actual-api/dist/
 
 # Install helper dependencies
 RUN npm install && npm update
