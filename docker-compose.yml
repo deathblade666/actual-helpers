@@ -1,6 +1,6 @@
 services:
   actual-helpers:
-    container_name: actual-helpers
+    container_name: actual-helpers-nightly
     image: ghcr.io/deathblade666/actual-helper-nightly:latest
     env_file: .env
     volumes:
