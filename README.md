@@ -2,7 +2,7 @@
 
 ### This is a fork of https://github.com/psybers/actual-helpers modified to be in-line with the nightly Actual Budget releases to avoid db migration errors. Think of this repo as a bleeding edge version of the upstream actual-helpers scripts
 #### What this repo does
-The below actions are done once a day.
+The below actions are done once a day. Everything is setup to occur automatically without any need for maintanence, if anything breaks please report it to the appropriate upstream repo
 
 1. Update to the latest upstream actual-helpers source.
 2. Clone the Actual Budge repo and compile the latest actual-api node package
