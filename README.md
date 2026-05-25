@@ -4,10 +4,10 @@
 #### What this repo does
 The below actions are done once a day.
 
-1. update to the latest upstream actual-helpers source.
-2. clone and compile the latest actual-api node package
-3. inject the compiled actual-api package into the docker image for use
-4. build and publish a docker image
+1. Update to the latest upstream actual-helpers source.
+2. Clone the Actual Budge repo and compile the latest actual-api node package
+3. Inject the compiled actual-api package into the docker image for use
+4. Build and publish a docker image
 
 # Actual Budget Helper Scripts
 
