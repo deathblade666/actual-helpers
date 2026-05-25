@@ -1,6 +1,13 @@
 **Note: this script requires having a starting balance in the account**
 
-### This is a fork of https://github.com/psybers/actual-helpers modified to bein line with the nightly Actual Budget releases to avoid db migration errors.
+### This is a fork of https://github.com/psybers/actual-helpers modified to be in-line with the nightly Actual Budget releases to avoid db migration errors. Think of this repo as a bleeding edge version of the upstream actual-helpers scripts
+#### What this repo does
+The below actions are done once a day.
+
+1. update to the latest upstream actual-helpers source.
+2. clone and compile the latest actual-api node package
+3. inject the compiled actual-api package into the docker image for use
+4. build and publish a docker image
 
 # Actual Budget Helper Scripts
 
