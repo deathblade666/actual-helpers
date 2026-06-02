@@ -1,13 +1,35 @@
-# Use an official Node.js runtime as a parent image
+# ==========================================
+# STAGE 1: Build & Package Actual Monorepo Workspace
+# ==========================================
+FROM node:20-slim AS builder
+WORKDIR /app
+
+# Install git so yarn can handle monorepo dependencies
+RUN apt-get update -qq && apt-get install -y --no-install-recommends git
+
+COPY actual-src/ .
+
+# 1. Install internal dependencies and compile the API
+# 2. Navigate to the API folder and pack it into a clean tarball package (.tgz)
+RUN yarn install --frozen-lockfile && \
+    yarn build:api && \
+    cd packages/api && \
+    yarn pack --filename actual-app-api.tgz
+
+# ==========================================
+# STAGE 2: Helper Runtime Container
+# ==========================================
 FROM node:22
 
+# Install System Requirements for Playwright/Selenium & Chrome
 RUN apt-get update -qq -y && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         libasound2 \
         libatk-bridge2.0-0 \
         libgtk-4-1 \
         libnss3 \
         xdg-utils \
+        unzip \
         wget && \
     wget -q -O chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/linux64/chrome-linux64.zip && \
     unzip chrome-linux64.zip && \
@@ -17,70 +39,46 @@ RUN apt-get update -qq -y && \
     wget -q -O chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/linux64/chromedriver-linux64.zip && \
     unzip -j chromedriver-linux64.zip chromedriver-linux64/chromedriver && \
     rm chromedriver-linux64.zip && \
-    mv chromedriver /usr/local/bin/
+    mv chromedriver /usr/local/bin/ && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Don't run as root
-USER node
-
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Create the cache directory
-RUN mkdir -p ./cache && chown node:node ./cache
+# Pull down ONLY the compiled, production-ready tarball archive from Stage 1
+COPY --from=builder /app/packages/api/actual-app-api.tgz /usr/src/app/
 
-# Define environment variables
+# Ensure application permissions are healthy
+RUN mkdir -p ./cache && chown -R node:node /usr/src/app
+USER node
+
+# Environment Variables
 ENV NODE_ENV=production
-
 ENV ACTUAL_SERVER_URL=""
 ENV ACTUAL_SERVER_PASSWORD=""
 ENV ACTUAL_SYNC_ID=""
-# allow self-signed SSL certs
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
-
-# needed for Selenium+chromedriver
 ENV CHROMEDRIVER_SKIP_DOWNLOAD=true
-
-# optional, for encrypted files
 ENV ACTUAL_FILE_PASSWORD=""
-
-# optional, if you want to use a different cache directory
 ENV ACTUAL_CACHE_DIR="./cache"
-
-# optional, name of the payee for added interest transactions
 ENV INTEREST_PAYEE_NAME="Loan Interest"
-
-# optional, name of the payee for added investment transactions
 ENV INVESTMENT_PAYEE_NAME="Investment"
-# optional, name of the category group for added investment tracking transactions
 ENV INVESTMENT_CATEGORY_GROUP_NAME="Income"
-# optional, name of the category for added investment tracking transactions
 ENV INVESTMENT_CATEGORY_NAME="Investment"
-
-# optional, for logging into SimpleFIN
 ENV SIMPLEFIN_CREDENTIALS=""
-
-# optional, name of the payee for Zestimate entries
 ENV ZESTIMATE_PAYEE_NAME="Zestimate"
-
-# optional, name of the payee for KBB entries
 ENV KBB_PAYEE_NAME="KBB"
-
-# optional, for retrieving Bitcoin Price (these default to Kraken USD)
 ENV BITCOIN_PRICE_URL="https://api.kraken.com/0/public/Ticker?pair=xbtusd"
 ENV BITCOIN_PRICE_JSON_PATH="result.XXBTZUSD.c[0]"
 ENV BITCOIN_PAYEE_NAME="Bitcoin Price Change"
-
-#optional, RentCast API key for fetching property data
 ENV RENTCAST_API_KEY=""
 ENV RENTCAST_PAYEE_NAME="RentCast"
 
-VOLUME ./cache
+VOLUME ["/usr/src/app/cache"]
 
-# Copy the current directory contents into the container at /usr/src/app
+# Copy helper scripts
 COPY --chown=node:node . .
 
-# Install any needed packages specified in package.json
+# Install helper dependencies
 RUN npm install && npm update
 
-# Run the app when the container launches
 ENTRYPOINT ["tail", "-f", "/dev/null"]
