@@ -19,21 +19,18 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           fetch-depth: 0
-          ref: main # 👈 Explicitly targets the main branch to avoid detached HEAD states
+          ref: main
 
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/psybers/actual-helpers.git
-          git fetch upstream # 👈 Fixed the typo here from git.fetch
+          git fetch upstream
 
       - name: Merge upstream/main
         run: |
-          # Configure Git identity so it can successfully commit the merge
           git config --global user.name 'deathblade666'
           git config --global user.email 'halo2ofdeath@gmail.com'
-          
-          # 👈 Safely merges upstream changes into your main branch without wiping customizations
-          git merge upstream/main --no-edit 
+          git merge upstream/main --no-edit
 
       - name: Fetch latest Actual commit SHA
         run: |
@@ -51,17 +48,23 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          # Configure Git identity again just in case the merge didn't require a commit
           git config --global user.name 'deathblade666'
           git config --global user.email 'halo2ofdeath@gmail.com'
           
-          # Only create a commit if actual-latest.txt was actually changed by the step above
           if [ "${{ steps.git-check.outputs.modified }}" = "true" ]; then
             git commit -am "Update Actual commit SHA"
           fi
           
-          # 👈 SAFE PUSH: Pushes standard merge & updates without overwriting history
           git push origin HEAD:main
+
+      # ---------------------------------------------------------
+      # 👇 CLONE ACTUAL SOURCE CODE (Fixes your "not found" error)
+      # ---------------------------------------------------------
+      - name: Clone Actual repo for Docker Build context
+        run: |
+          git clone https://github.com/actualbudget/actual.git actual-src
+          cd actual-src
+          git checkout $(cat ../actual-latest.txt)
 
       # -------------------------------
       # Build & Publish Docker Image
