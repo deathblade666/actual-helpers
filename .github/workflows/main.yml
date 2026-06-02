@@ -19,15 +19,21 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           fetch-depth: 0
+          ref: main # 👈 Explicitly targets the main branch to avoid detached HEAD states
 
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/psybers/actual-helpers.git
-          git.fetch upstream
+          git fetch upstream # 👈 Fixed the typo here from git.fetch
 
-      - name: Rebase onto upstream/main
+      - name: Merge upstream/main
         run: |
-          git rebase upstream/main || true
+          # Configure Git identity so it can successfully commit the merge
+          git config --global user.name 'deathblade666'
+          git config --global user.email 'halo2ofdeath@gmail.com'
+          
+          # 👈 Safely merges upstream changes into your main branch without wiping customizations
+          git merge upstream/main --no-edit 
 
       - name: Fetch latest Actual commit SHA
         run: |
@@ -44,12 +50,18 @@ jobs:
           fi
 
       - name: Commit and push changes
-        if: steps.git-check.outputs.modified == 'true'
         run: |
+          # Configure Git identity again just in case the merge didn't require a commit
           git config --global user.name 'deathblade666'
           git config --global user.email 'halo2ofdeath@gmail.com'
-          git commit -am "Rebase upstream + update Actual commit SHA"
-          git push --force-with-lease
+          
+          # Only create a commit if actual-latest.txt was actually changed by the step above
+          if [ "${{ steps.git-check.outputs.modified }}" = "true" ]; then
+            git commit -am "Update Actual commit SHA"
+          fi
+          
+          # 👈 SAFE PUSH: Pushes standard merge & updates without overwriting history
+          git push origin HEAD:main
 
       # -------------------------------
       # Build & Publish Docker Image
