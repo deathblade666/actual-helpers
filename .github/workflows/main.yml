@@ -86,3 +86,18 @@ jobs:
           COMMIT_SHA=$(cat actual-latest.txt)
           docker push ghcr.io/deathblade666/actual-helper-nightly:latest
           docker push ghcr.io/deathblade666/actual-helper-nightly:${COMMIT_SHA}
+
+      # ---------------------------------------------------------
+      # Webhook Notification (Discord Compatible)
+      # ---------------------------------------------------------
+      - name: Send completion webhook
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            MESSAGE="✅ **Actual Helper Nightly** build completed successfully for commit \`$(cat actual-latest.txt)\`."
+          else
+            MESSAGE="❌ **Actual Helper Nightly** build **FAILED** for commit \`$(cat actual-latest.txt)\`. Check your GitHub Actions logs!"
+          fi
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{\"content\":\"${MESSAGE}\"}" \
+          ${{ secrets.WEBHOOK_URL }}
