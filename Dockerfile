@@ -1,7 +1,8 @@
 # ==========================================
 # STAGE 1: Build & Package Actual Monorepo Workspace
 # ==========================================
-FROM node:20-slim AS builder
+# Upgraded to node:22 to match Actual's modern dependencies and Stage 2
+FROM node:22-slim AS builder
 WORKDIR /app
 
 # Install git so yarn can handle monorepo dependencies
@@ -9,10 +10,14 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends git
 
 COPY actual-src/ .
 
-# 1. Install internal dependencies and compile the API
-# 2. Navigate to the API folder and pack it into a clean tarball package (.tgz)
-RUN yarn install --frozen-lockfile && \
-    yarn build:api && \
+# Enable Corepack so the container respects Actual's configured Yarn 4 engine
+RUN corepack enable
+
+# 1. Install internal dependencies securely using modern Yarn immutable rules
+# 2. Build the API bundle across the workspace topological graph
+# 3. Navigate to the API folder and pack it into a clean tarball package (.tgz)
+RUN yarn install --immutable && \
+    yarn workspace @actual-app/api build && \
     cd packages/api && \
     yarn pack --filename actual-app-api.tgz
 
