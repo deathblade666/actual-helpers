@@ -16,9 +16,14 @@ RUN corepack enable
 # 1. Install internal dependencies securely using modern Yarn immutable rules
 # 2. Build the API bundle across the workspace topological graph
 # 3. Navigate to the API folder and pack it into a clean tarball package (.tgz)
-RUN yarn install --immutable && \
-    yarn build && \
+#RUN yarn install --immutable && \
+#    yarn build && \
    # yarn workspace @actual-app/api build && \
+#    cd packages/api && \
+#    yarn pack --filename actual-app-api.tgz
+
+RUN yarn install --immutable && \
+    yarn run build --to @actual-app/api && \
     cd packages/api && \
     yarn pack --filename actual-app-api.tgz
 
