@@ -17,7 +17,8 @@ RUN corepack enable
 # 2. Build the API bundle across the workspace topological graph
 # 3. Navigate to the API folder and pack it into a clean tarball package (.tgz)
 RUN yarn install --immutable && \
-    yarn workspace @actual-app/api build && \
+    yarn build && \
+   # yarn workspace @actual-app/api build && \
     cd packages/api && \
     yarn pack --filename actual-app-api.tgz
 
