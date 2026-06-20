@@ -2,7 +2,7 @@
 # STAGE 1: Build & Package Actual Monorepo Workspace
 # ==========================================
 # Upgraded to node:22 to match Actual's modern dependencies and Stage 2
-FROM node:22-slim AS builder
+FROM node:22 AS builder
 WORKDIR /app
 
 # Install git so yarn can handle monorepo dependencies
