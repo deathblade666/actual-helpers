@@ -30,7 +30,7 @@ jobs:
         run: |
           git config --global user.name 'deathblade666'
           git config --global user.email 'halo2ofdeath@gmail.com'
-          git merge upstream/main --no-edit
+          git merge upstream/main --no-edit -X theirs
 
       - name: Fetch latest Actual commit SHA
         run: |
