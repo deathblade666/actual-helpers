@@ -101,8 +101,8 @@ The repository automatically builds and pushes a Docker image of itself every
 time the repository is modified or Actual makes a new release.  To use:
 
 ```console
-docker pull ghcr.io/psybers/actual-helpers
-docker run -d --name actual-helpers ghcr.io/psybers/actual-helpers
+docker pull docker pull ghcr.io/deathblade666/actual-helper-nightly
+docker run -d --name actual-helpers ghcr.io/deathblade666/actual-helper-nightly
 ```
 
 Then you can run specific commands inside the container, e.g.:
