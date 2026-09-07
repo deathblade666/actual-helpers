@@ -84,9 +84,7 @@ ENV BITCOIN_PAYEE_NAME="Bitcoin Price Change"
 ENV RENTCAST_API_KEY=""
 ENV RENTCAST_PAYEE_NAME="RentCast"
 
-VOLUME ["/usr/src/app/cache"]
-
-# Copy helper scripts
+# Copy the current directory contents into the container at /usr/src/app
 COPY --chown=node:node . .
 
 # Install helper dependencies
